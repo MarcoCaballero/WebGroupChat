@@ -9,55 +9,45 @@ import java.util.concurrent.TimeoutException;
 
 public class ChatManager {
 
+	private ReadAndWriteLock guard;
+
 	private Map<String, Chat> chats = new ConcurrentHashMap<>();
 	private Map<String, User> users = new ConcurrentHashMap<>();
 	private int maxChats;
 
 	public ChatManager(int maxChats) {
 		this.maxChats = maxChats;
+		guard = new ReadAndWriteLock();
 	}
 
 	public void newUser(User user) {
-		
-		if(users.containsKey(user.getName())){
-			throw new IllegalArgumentException("There is already a user with name \'"
-					+ user.getName() + "\'");
-		} else {
-			users.put(user.getName(), user);
+		if (isUserRegisteredYet(user.getName())) {
+			throw getUserRegisteredYetException(user.getName());
+		}else {
+			addUser(user);
 		}
 	}
 
 	public Chat newChat(String name, long timeout, TimeUnit unit) throws InterruptedException,
 			TimeoutException {
 
-		if (chats.size() == maxChats) {
-			throw new TimeoutException("There is no enought capacity to create a new chat");
+		if (isMaxChatsCapacityFull()) { 
+			throw getMaxChatsCapacityException(); 
 		}
 
-		if(chats.containsKey(name)){
-			return chats.get(name);
-		} else {
-			Chat newChat = new Chat(this, name);
-			chats.put(name, newChat);
-			
-			for(User user : users.values()){
-				user.newChat(newChat);
-			}
-
-			return newChat;
-		}
+		return (isChatCreatedYet(name)) ? getChat(name) : createChat(name);
 	}
 
 	public void closeChat(Chat chat) {
-		Chat removedChat = chats.remove(chat.getName());
+		Chat removedChat = removeChat(chat.getName());
 		if (removedChat == null) {
-			throw new IllegalArgumentException("Trying to remove an unknown chat with name \'"
-					+ chat.getName() + "\'");
+			throw getCloseConnectionUnknownChatException(chat.getName());
 		}
 
-		for(User user : users.values()){
-			user.chatClosed(removedChat);
-		}
+		guard.read(() -> {
+			getUsers().stream()
+				.forEach((user) -> user.chatClosed(removedChat));
+		});
 	}
 
 	public Collection<Chat> getChats() {
@@ -65,16 +55,63 @@ public class ChatManager {
 	}
 
 	public Chat getChat(String chatName) {
-		return chats.get(chatName);
+		return guard.read(()-> chats.get(chatName));
+	}
+
+	public Chat removeChat(String chatName) {
+		return guard.read(()-> chats.remove(chatName));
+	}
+
+	public User getUser(String userName) {
+		return guard.read(()-> users.get(userName));
 	}
 
 	public Collection<User> getUsers() {
 		return Collections.unmodifiableCollection(users.values());
 	}
 
-	public User getUser(String userName) {
-		return users.get(userName);
+	public void close() {}
+
+	private void addUser(User user) {
+		guard.write(() -> {
+			users.put(user.getName(), user);
+		});
 	}
 
-	public void close() {}
+	private Chat createChat(String chatName) {
+		Chat newChat = new Chat(this, chatName);
+
+		guard.write(() -> chats.put(chatName, newChat));
+
+		guard.read(() -> {
+			getUsers().stream()
+				.forEach((user) -> user.newChat(newChat));
+		});
+
+		return newChat;
+	}
+
+	private boolean isChatCreatedYet(String chatName) {
+		return guard.read(() -> chats.containsKey(chatName));
+	}
+
+	private boolean isUserRegisteredYet(String userName) {
+		return guard.read(() -> users.containsKey(userName));
+	}
+
+	private boolean isMaxChatsCapacityFull() {
+		return guard.read(() -> chats.size() == maxChats);
+	}
+
+	private IllegalArgumentException getUserRegisteredYetException(String userName) {
+		return new IllegalArgumentException("There is already a user with name \'" + userName + "\'");
+	}
+
+	private IllegalArgumentException getCloseConnectionUnknownChatException(String chatName) {
+		return new IllegalArgumentException("Trying to remove an unknown chat with name \'" + chatName + "\'");
+	}
+
+	private TimeoutException getMaxChatsCapacityException() {
+		return new TimeoutException("There is no enought capacity to create a new chat");
+	}
 }

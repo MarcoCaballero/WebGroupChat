@@ -3,6 +3,7 @@ package es.sidelab.webchat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -30,7 +31,7 @@ public class ChatManagerTest {
 		});
 
 		// Crear un nuevo chat en el chatManager
-		chatManager.newChat("Chat2", 5, TimeUnit.SECONDS);
+		chatManager.newChat("Chat", 5, TimeUnit.SECONDS);
 
 		// Comprobar que el chat recibido en el método 'newChat' se llama 'Chat'
 		assertTrue("The method 'newChat' should be invoked with 'Chat', but the value is "
@@ -41,6 +42,7 @@ public class ChatManagerTest {
 	public void newUserInChat() throws InterruptedException, TimeoutException {
 
 		ChatManager chatManager = new ChatManager(5);
+		CountDownLatch latch = new CountDownLatch(1);
 
 		final String[] newUser = new String[1];
 
@@ -48,6 +50,7 @@ public class ChatManagerTest {
 			@Override
 			public void newUserInChat(Chat chat, User user) {
 				newUser[0] = user.getName();
+				latch.countDown();
 			}
 		};
 
@@ -60,6 +63,8 @@ public class ChatManagerTest {
 
 		chat.addUser(user1);
 		chat.addUser(user2);
+
+		assertTrue(latch.await(50, TimeUnit.MILLISECONDS));
 
 		assertTrue("Notified new user '" + newUser[0] + "' is not equal than user name 'user2'",
 				"user2".equals(newUser[0]));
