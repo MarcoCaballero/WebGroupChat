@@ -40,11 +40,10 @@ public class ConnectionTask implements Callable<TestTaskResult> {
                 String chatId = "chat_" + i;
                 Chat chat = chatManager.newChat(chatId, 5, TimeUnit.SECONDS);
                 chat.addUser(user);
-                // ConcurrentPrinter.getInstance().printWithTaskSignature(chat.getUsers(), "User: ",
-                // this.id); // CARE GENERATES FALSE POSITIVE, GOOD FOR DEBUG
+                // ConcurrentPrinter.getInstance().printWithTaskSignature(chat.getUsers(), "User: ", this.id); // CARE GENERATES FALSE POSITIVE, GOOD FOR DEBUG
             }
 
-            ConcurrentPrinter.getInstance().printEndWithTaskSignature(this.id);
+            // ConcurrentPrinter.getInstance().printEndWithTaskSignature(this.id);
             result.checkFinished();
 
             return result;

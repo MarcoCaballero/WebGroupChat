@@ -41,7 +41,6 @@ public class ConcurrentBehaviorTest {
         List<TestTaskResult> results = new ArrayList<>();
 
         for (int i = 0; i < MAX_USERS; i++) {
-            callables.add(new ConnectionTask(i, chatManager, MAX_ITERATIONS_PER_USER));
             try {
                 Future<TestTaskResult> future = executor.take();
                 results.add(future.get());
