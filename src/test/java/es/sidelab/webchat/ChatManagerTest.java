@@ -68,6 +68,5 @@ public class ChatManagerTest {
 
 		assertTrue("Notified new user '" + newUser[0] + "' is not equal than user name 'user2'",
 				"user2".equals(newUser[0]));
-
 	}
 }
