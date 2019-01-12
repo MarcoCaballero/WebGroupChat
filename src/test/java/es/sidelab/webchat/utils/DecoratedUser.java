@@ -3,6 +3,8 @@ package es.sidelab.webchat.utils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Exchanger;
+
 import es.codeurjc.webchat.Chat;
 import es.codeurjc.webchat.MessageInfo.MessageType;
 import es.codeurjc.webchat.User;
@@ -12,6 +14,8 @@ public class DecoratedUser extends TestUser {
 
 	Map<MessageType, CountDownLatch> latches;
 	private long delay; // ms
+	private Exchanger<Integer> messageExchanger;
+
 
 	public DecoratedUser(String name, long delay, Map<MessageType, CountDownLatch> latches) {
 		super(name);
@@ -43,6 +47,12 @@ public class DecoratedUser extends TestUser {
 		return this;
 	}
 
+	public DecoratedUser messageExchanger(Exchanger<Integer> exchanger) {
+		this.messageExchanger = exchanger;
+		return this;
+	}
+
+
 	@Override
 	public void newUserInChat(Chat chat, User user) {
 		super.newUserInChat(chat, user);
@@ -65,6 +75,9 @@ public class DecoratedUser extends TestUser {
 		CountDownLatch msgLatch = latches.get(MessageType.MSG);
 		if (msgLatch != null)
 			delayCountDown(msgLatch, delay);
+		if (messageExchanger != null)
+			exchangeMessage(message);
+		
 	}
 
 	private void delayCountDown(CountDownLatch latch, long delay) {
@@ -78,5 +91,11 @@ public class DecoratedUser extends TestUser {
 
 	private void setLatch(MessageType type, CountDownLatch latch) {
 		latches.putIfAbsent(type, latch);
+	}
+
+	private void exchangeMessage(String message){
+		try{
+			messageExchanger.exchange(Integer.valueOf(message));
+		} catch (InterruptedException e) {}
 	}
 }
