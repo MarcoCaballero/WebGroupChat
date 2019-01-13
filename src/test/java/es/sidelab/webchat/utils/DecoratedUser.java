@@ -14,7 +14,7 @@ public class DecoratedUser extends TestUser {
 
 	Map<MessageType, CountDownLatch> latches;
 	private long delay; // ms
-	private Exchanger<Integer> messageExchanger;
+	private Exchanger<String> messageExchanger;
 
 
 	public DecoratedUser(String name, long delay, Map<MessageType, CountDownLatch> latches) {
@@ -47,7 +47,7 @@ public class DecoratedUser extends TestUser {
 		return this;
 	}
 
-	public DecoratedUser messageExchanger(Exchanger<Integer> exchanger) {
+	public DecoratedUser messageExchanger(Exchanger<String> exchanger) {
 		this.messageExchanger = exchanger;
 		return this;
 	}
@@ -95,7 +95,7 @@ public class DecoratedUser extends TestUser {
 
 	private void exchangeMessage(String message){
 		try{
-			messageExchanger.exchange(Integer.valueOf(message));
+			messageExchanger.exchange(message);
 		} catch (InterruptedException e) {}
 	}
 }

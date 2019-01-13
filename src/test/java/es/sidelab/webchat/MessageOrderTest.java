@@ -26,7 +26,7 @@ public class MessageOrderTest {
 
     private static final String CHAT_NAME = "CHAT_SuT";
 
-    private Exchanger<Integer> exchanger = new Exchanger<>();
+    private Exchanger<String> exchanger = new Exchanger<>();
 
     @Parameters
     public static Iterable<? extends Object> data() {
@@ -76,7 +76,7 @@ public class MessageOrderTest {
             chat.addUser(receiver);
             for (int messageSent = 0; messageSent < MESSAGES; messageSent++) {
                 chat.sendMessage(sender, String.valueOf(messageSent));
-                int messageReceived = exchanger.exchange(null);
+                int messageReceived = Integer.valueOf(exchanger.exchange(null));
                 assertTrue("Message sent " + messageSent + ", does not correspond with message received " + messageReceived,
                 messageSent == messageReceived);
             }
