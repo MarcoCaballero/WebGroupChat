@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>es.codeurjc</groupId>
-	<artifactId>webchat</artifactId>
+	<artifactId>marco.caballero.deldedo-alejandro.gonzalez.badillo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
