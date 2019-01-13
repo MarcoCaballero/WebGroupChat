@@ -68,7 +68,6 @@ public class MessageOrderTest {
         try {
             User sender =  new TestUser("SENDER");
             User receiver =  new DecoratedUser("RECEIVER")
-            .latchMessage(messageLatch)
             .messageExchanger(exchanger);
             chatManager.newUser(sender);
             chat.addUser(sender);
