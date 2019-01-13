@@ -59,6 +59,8 @@ public class DecoratedUser extends TestUser {
 		CountDownLatch entryLatch = latches.get(MessageType.ENTRY);
 		if (entryLatch != null)
 			delayCountDown(entryLatch, delay);
+		if (messageExchanger != null)
+			exchangeMessage(user.getName());
 	}
 
 	@Override
@@ -67,6 +69,8 @@ public class DecoratedUser extends TestUser {
 		CountDownLatch exitLatch = latches.get(MessageType.EXIT);
 		if (exitLatch != null)
 			delayCountDown(exitLatch, delay);
+		if (messageExchanger != null)
+			exchangeMessage(user.getName());
 	}
 
 	@Override
